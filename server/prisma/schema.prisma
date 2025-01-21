@@ -8,21 +8,18 @@ datasource db {
 }
 
 model Prompt {
-  id           String   @id @default(uuid())
-  name         String   // e.g., "A - Style"
-  promptText   String
-  systemPrompt String?
-  votes        Vote[]
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-}
-
-model Vote {
-  id        String   @id @default(uuid())
-  promptId  String
-  score     String   // Only allows: 'good', 'bad', 'ok'
-  prompt    Prompt   @relation(fields: [promptId], references: [id])
-  createdAt DateTime @default(now())
-
-  @@index([promptId])
+  id          Int      @id @default(autoincrement())
+  name        String
+  promptText  String   // Changed from 'text' to 'promptText' to match our usage
+  
+  // Vote counts
+  goodVotes   Int      @default(0)
+  okVotes     Int      @default(0)
+  badVotes    Int      @default(0)
+  totalVotes  Int      @default(0)
+  
+  // Percentages
+  goodPercentage Int   @default(0)
+  okPercentage   Int   @default(0)
+  badPercentage  Int   @default(0)
 }

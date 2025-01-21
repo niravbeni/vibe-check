@@ -87,4 +87,6 @@ export const PromptName = styled.h3`
 
 export const Stats = styled.div`
   margin-bottom: 0.5rem;
+  display: flex;    
+  justify-content: space-between;
 ` 

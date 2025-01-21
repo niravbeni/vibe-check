@@ -17,9 +17,9 @@ interface CustomImageData {
 }
 
 interface ImageContainerProps {
-  images: CustomImageData[]
-  onImageUpload?: (files: File[], index: number) => void
-  onImageDelete?: (index: number) => void
+  images: CustomImageData[];
+  onImageUpload?: (files: File[], index: number) => void;
+  onImageDelete?: (index: number) => void;
 }
 
 export const ImageContainer = ({ images, onImageUpload, onImageDelete }: ImageContainerProps) => {

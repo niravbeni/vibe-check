@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { PromptResult, CustomImageData, PromptData } from './types/index'
+import { CustomImageData, PromptData } from './types/index'
 import { ImageContainer } from './components/ImageContainer/ImageContainer'
 import { Container, GenerateButton, TitleCheckmark, LoadingBar, SuccessCheckmark } from './App.styles'
 import { GlobalStyles } from './styles/GlobalStyles'
@@ -12,33 +12,30 @@ function App() {
     { url: '', base64: '' },
     { url: '', base64: '' }
   ])
-  const [promptResults, setPromptResults] = useState<PromptResult[]>([])
-  const [currentIndex, setCurrentIndex] = useState(0)
+  const [labels, setLabels] = useState<string[]>([])
   const [showResults, setShowResults] = useState(false)
-  const [promptsData, setPromptsData] = useState<PromptData[]>([])
+  const [promptData, setPromptData] = useState<PromptData | null>(null)
   const [showRankings, setShowRankings] = useState(false)
   const [isGenerating, setIsGenerating] = useState(false)
 
-  // Fetch prompts when component mounts
+  // Fetch prompt data when component mounts
   useEffect(() => {
-    const fetchPrompts = async () => {
+    const fetchPrompt = async () => {
       try {
         const response = await fetch('http://localhost:3000/api/prompts')
-        if (!response.ok) {
-          throw new Error('Failed to fetch prompts')
-        }
+        if (!response.ok) throw new Error('Failed to fetch prompt')
         const data = await response.json()
-        setPromptsData(data.prompts)
+        setPromptData(data.prompts[0]) // Get the single prompt
       } catch (error) {
-        console.error('Error fetching prompts:', error)
+        console.error('Error fetching prompt:', error)
       }
     }
 
-    fetchPrompts()
+    fetchPrompt()
   }, [])
 
   const handleImageUpload = async (files: File[], index: number) => {
-    const file = files[0] // Take the first file if multiple are dropped
+    const file = files[0]
     if (file) {
       try {
         const base64String = await new Promise<string>((resolve, reject) => {
@@ -65,43 +62,25 @@ function App() {
     }
   }
 
-  const fetchPromptRankings = async () => {
-    try {
-      const response = await fetch('http://localhost:3000/api/prompts')
-      if (!response.ok) {
-        throw new Error('Failed to fetch prompts')
-      }
-      const data = await response.json()
-      setPromptsData(data.prompts)
-    } catch (error) {
-      console.error('Error fetching prompt rankings:', error)
-    }
-  }
-
   const handleEvaluation = async (score: 'good' | 'bad' | 'ok') => {
     try {
-      const promptId = promptResults[currentIndex].promptId
-      console.log('Submitting vote:', { promptId, score })
+      if (!promptData) return
 
-      const response = await fetch(`http://localhost:3000/api/prompts/${promptId}/vote`, {
+      const response = await fetch(`http://localhost:3000/api/prompts/${promptData.id}/vote`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ score })
       })
 
       if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Failed to submit vote')
+        throw new Error('Failed to submit vote')
       }
 
       // Fetch updated rankings
-      await fetchPromptRankings()
-
-      if (currentIndex < promptResults.length - 1) {
-        setCurrentIndex(prev => prev + 1)
-      } else {
-        setShowResults(true)
-      }
+      const updatedPrompt = await fetch('http://localhost:3000/api/prompts')
+      const data = await updatedPrompt.json()
+      setPromptData(data.prompts[0])
+      setShowResults(true)
     } catch (error) {
       console.error('Error submitting evaluation:', error)
       alert('Error submitting vote. Please try again.')
@@ -116,53 +95,20 @@ function App() {
 
   const generateLabels = async () => {
     try {
-      console.log('Starting label generation...')
-      const loadedImages = await Promise.all(
-        images.map(async (img: CustomImageData) => {
-          if (!img.url) return img
-          try {
-            const response = await fetch(img.url)
-            const blob = await response.blob()
-            const base64 = await new Promise<string>((resolve, reject) => {
-              const reader = new FileReader()
-              reader.onload = () => {
-                if (typeof reader.result === 'string') {
-                  resolve(reader.result)
-                }
-              }
-              reader.onerror = reject
-              reader.readAsDataURL(blob)
-            })
-            return { ...img, base64 }
-          } catch (error) {
-            console.error('Error processing image:', error)
-            throw new Error('Failed to process image')
-          }
-        })
-      )
-
-      console.log('Images processed, sending to server...', {
-        numberOfImages: loadedImages.length,
-        hasBase64: loadedImages.every(img => img.base64),
-        firstImageLength: loadedImages[0]?.base64?.length
-      })
-
       const response = await fetch('http://localhost:3000/api/generate-labels', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ images: loadedImages })
+        body: JSON.stringify({ images })
       })
 
       if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(`Failed to generate labels: ${errorData.error || response.statusText}`)
+        throw new Error('Failed to generate labels')
       }
       
-      const results = await response.json()
-      console.log('Labels generated successfully:', results)
-      setPromptResults(results)
+      const data = await response.json()
+      setLabels(data.labels)
     } catch (error) {
-      console.error('Detailed error generating labels:', error)
+      console.error('Error generating labels:', error)
       alert('Error generating labels. Please try again.')
     }
   }
@@ -191,15 +137,15 @@ function App() {
           </TitleCheckmark>
         </div>
         
-        <PromptRankings prompts={promptsData} showRankings={showRankings} />
+        {promptData && <PromptRankings prompt={promptData} showRankings={showRankings} />}
         
         <ImageContainer 
           images={images}
-          onImageUpload={!promptResults.length ? handleImageUpload : undefined}
-          onImageDelete={!promptResults.length ? handleImageDelete : undefined}
+          onImageUpload={!labels.length ? handleImageUpload : undefined}
+          onImageDelete={!labels.length ? handleImageDelete : undefined}
         />
 
-        {!promptResults.length && !isGenerating && (
+        {!labels.length && !isGenerating && (
           <GenerateButton 
             onClick={handleStart}
             disabled={!images.every(img => img.url)}
@@ -212,13 +158,12 @@ function App() {
           <LoadingBar />
         )}
 
-        {promptResults.length > 0 && !showResults && (
+        {labels.length > 0 && !showResults && promptData && (
           <ButtonCard
-            promptText={promptResults[currentIndex]?.promptText || ''}
-            labels={promptResults[currentIndex]?.labels || []}
+            labels={labels}
             onEvaluate={handleEvaluation}
             isLoading={false}
-            isFinalPrompt={currentIndex === promptResults.length - 1}
+            isFinalPrompt={true}
           />
         )}
 

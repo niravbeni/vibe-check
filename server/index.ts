@@ -1,9 +1,8 @@
 import express from 'express'
-import OpenAI from 'openai'
 import cors from 'cors'
 import dotenv from 'dotenv'
 import prisma from './lib/prisma'
-import { randomUUID } from 'crypto'
+import generateLabelsRouter from './src/routes/generate-labels'
 
 dotenv.config()
 
@@ -16,24 +15,7 @@ const app = express()
 app.use(cors())
 app.use(express.json({ limit: '50mb' }))
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
-})
-
 // Define types for our data structures
-type Vote = {
-  score: string;
-  id: string;
-}
-
-type PromptWithVoteData = {
-  id: string;
-  name: string;
-  promptText: string;
-  systemPrompt: string | null;
-  votes: Vote[];
-}
-
 type VoteCount = {
   good: number;
   ok: number;
@@ -41,14 +23,36 @@ type VoteCount = {
 }
 
 type PromptSummary = {
-  id: string;
+  id: number;
   name: string;
   promptText: string;
-  systemPrompt: string | null;
   votes: VoteCount;
   percentages: VoteCount;
   totalVotes: number;
   summary: string;
+}
+
+type PromptWithData = {
+  id: number;
+  name: string;
+  promptText: string;
+  goodVotes: number;
+  okVotes: number;
+  badVotes: number;
+  totalVotes: number;
+  goodPercentage: number;
+  okPercentage: number;
+  badPercentage: number;
+}
+
+type VoteUpdateData = {
+  totalVotes: number;
+  goodVotes?: number;
+  okVotes?: number;
+  badVotes?: number;
+  goodPercentage: number;
+  okPercentage: number;
+  badPercentage: number;
 }
 
 // Get all prompts with their vote counts
@@ -61,15 +65,15 @@ app.get('/api/prompts', async (req, res) => {
         id: true,
         name: true,
         promptText: true,
-        systemPrompt: true,
-        votes: {
-          select: {
-            score: true
-          }
-        }
+        goodVotes: true,
+        okVotes: true,
+        badVotes: true,
+        totalVotes: true,
+        goodPercentage: true,
+        okPercentage: true,
+        badPercentage: true
       }
     })
-
     console.log('Found prompts:', prompts)
 
     if (!prompts || prompts.length === 0) {
@@ -83,40 +87,37 @@ app.get('/api/prompts', async (req, res) => {
     }
 
     // Transform the data to include vote counts
-    const promptsWithCounts: PromptSummary[] = prompts.map((prompt: PromptWithVoteData) => {
-      const voteCount = {
-        good: prompt.votes.filter((v: Vote) => v.score === 'good').length,
-        ok: prompt.votes.filter((v: Vote) => v.score === 'ok').length,
-        bad: prompt.votes.filter((v: Vote) => v.score === 'bad').length
+    const promptsWithCounts: PromptSummary[] = prompts.map((prompt: PromptWithData) => {
+      const votes = {
+        good: prompt.goodVotes,
+        ok: prompt.okVotes,
+        bad: prompt.badVotes
       }
-      
-      const totalVotes = voteCount.good + voteCount.ok + voteCount.bad
       const percentages = {
-        good: totalVotes ? Math.round((voteCount.good / totalVotes) * 100) : 0,
-        ok: totalVotes ? Math.round((voteCount.ok / totalVotes) * 100) : 0,
-        bad: totalVotes ? Math.round((voteCount.bad / totalVotes) * 100) : 0
+        good: prompt.goodPercentage,
+        ok: prompt.okPercentage,
+        bad: prompt.badPercentage
       }
 
       return {
         id: prompt.id,
         name: prompt.name,
         promptText: prompt.promptText,
-        systemPrompt: prompt.systemPrompt,
-        votes: voteCount,
+        votes,
         percentages,
-        totalVotes,
-        summary: `${prompt.name}: ${voteCount.good} good (${percentages.good}%), ${voteCount.ok} ok (${percentages.ok}%), ${voteCount.bad} bad (${percentages.bad}%) - Total: ${totalVotes}`
+        totalVotes: prompt.totalVotes,
+        summary: `${prompt.name}: ${votes.good} good (${percentages.good}%), ${votes.ok} ok (${percentages.ok}%), ${votes.bad} bad (${percentages.bad}%) - Total: ${prompt.totalVotes}`
       }
     })
 
     // Sort by total votes or percentage of good votes
-    promptsWithCounts.sort((a: PromptSummary, b: PromptSummary) => b.votes.good - a.votes.good)
+    promptsWithCounts.sort((a, b) => b.votes.good - a.votes.good)
 
     const response = {
       prompts: promptsWithCounts,
       totalStats: {
-        totalVotes: promptsWithCounts.reduce((sum: number, p: PromptSummary) => sum + p.totalVotes, 0),
-        byPrompt: promptsWithCounts.map((p: PromptSummary) => p.summary)
+        totalVotes: promptsWithCounts.reduce((sum, p) => sum + p.totalVotes, 0),
+        byPrompt: promptsWithCounts.map(p => p.summary)
       }
     }
 
@@ -155,25 +156,44 @@ app.post('/api/prompts/:promptId/vote', async (req, res) => {
 
     // Check if prompt exists
     const prompt = await prisma.prompt.findUnique({
-      where: { id: promptId }
+      where: { id: parseInt(promptId) }
     })
 
     if (!prompt) {
       return res.status(404).json({ error: 'Prompt not found' })
     }
 
-    // Create vote with explicit data
-    const vote = await prisma.vote.create({
-      data: {
-        id: randomUUID(),
-        promptId,
-        score,
-        createdAt: new Date()
-      }
+    // Calculate new vote counts
+    const newTotalVotes = prompt.totalVotes + 1
+    const data: VoteUpdateData = {
+      totalVotes: newTotalVotes,
+      goodPercentage: 0,
+      okPercentage: 0,
+      badPercentage: 0
+    }
+
+    // Update the specific vote count
+    if (score === 'good') data.goodVotes = prompt.goodVotes + 1
+    else if (score === 'ok') data.okVotes = prompt.okVotes + 1
+    else if (score === 'bad') data.badVotes = prompt.badVotes + 1
+
+    // Calculate new percentages
+    const newGoodVotes = data.goodVotes ?? prompt.goodVotes
+    const newOkVotes = data.okVotes ?? prompt.okVotes
+    const newBadVotes = data.badVotes ?? prompt.badVotes
+
+    data.goodPercentage = Math.round((newGoodVotes / newTotalVotes) * 100)
+    data.okPercentage = Math.round((newOkVotes / newTotalVotes) * 100)
+    data.badPercentage = Math.round((newBadVotes / newTotalVotes) * 100)
+
+    // Update the prompt
+    const updatedPrompt = await prisma.prompt.update({
+      where: { id: parseInt(promptId) },
+      data
     })
 
-    console.log('Vote created:', vote)
-    res.json({ success: true, vote })
+    console.log('Vote recorded:', updatedPrompt)
+    res.json({ success: true, prompt: updatedPrompt })
 
   } catch (error) {
     console.error('Vote creation error:', {
@@ -184,166 +204,28 @@ app.post('/api/prompts/:promptId/vote', async (req, res) => {
     })
 
     res.status(500).json({ 
-      error: 'Failed to create vote',
+      error: 'Failed to record vote',
       details: error instanceof Error ? error.message : 'Unknown error'
     })
   }
 })
 
-// Update PromptWithSystem type
-type PromptWithSystem = {
-  id: string;
-  name: string;
-  promptText: string;
-  systemPrompt?: string;
-}
-
-app.post('/api/generate-labels', async (req, res) => {
-  try {
-    const { images } = req.body
-    
-    console.log('Server received request:', {
-      numberOfImages: images?.length || 0,
-      hasImages: !!images,
-      firstImageType: images?.[0]?.base64?.substring(0, 50)
-    })
-
-    if (!images || images.length !== 3) {
-      throw new Error('Exactly 3 images are required')
-    }
-
-    try {
-      const prompts = await prisma.prompt.findMany()
-      if (!prompts || prompts.length === 0) {
-        throw new Error('No prompts found in database')
-      }
-
-      // Generate separate labels for each prompt
-      const results = await Promise.all(prompts.map(async (prompt: PromptWithSystem) => {
-        try {
-          const response = await openai.chat.completions.create({
-            model: "gpt-4o-mini",
-            messages: [
-              {
-                role: "system",
-                content: `${prompt.systemPrompt || "You are an AI trained to analyze images"}. 
-                  CRITICAL INSTRUCTION: Respond ONLY with short, single-word or two-word labels separated by commas.
-                  NO sentences, descriptions, or explanations.
-                  NO categories or headers.
-                  NO image numbering.
-                  
-                  GOOD EXAMPLE: "minimalist, calm, sophisticated, urban, confident, modern"
-                  BAD EXAMPLE: "Mood: Calm and relaxed. The atmosphere is minimalistic..."
-                  
-                  Keep labels concise and avoid any formatting or explanatory text.`
-              },
-              {
-                role: "user",
-                content: [
-                  { 
-                    type: "text", 
-                    text: `${prompt.promptText || "Analyze these images"}. 
-                      Return ONLY comma-separated labels.
-                      Example format: "elegant, modern, minimal, bold, refined"` 
-                  },
-                  ...images.map((img: { base64: string }) => ({
-                    type: "image_url",
-                    image_url: {
-                      url: img.base64,
-                      detail: "low"
-                    }
-                  }))
-                ]
-              }
-            ],
-            max_tokens: 300
-          })
-
-          const content = response.choices[0]?.message?.content || ''
-          const cleanedLabels = content
-            .replace(/\n/g, ' ')
-            .replace(/\d+\./g, '')
-            .replace(/\*\*/g, '')
-            .replace(/Image \d+:?/gi, '')
-            .replace(/[-•]/g, ',')
-            .replace(/Mood:|Atmosphere:|Emotional Qualities:|Overall:/gi, '')  // Remove common headers
-            .replace(/\s+/g, ' ')  // Normalize whitespace
-            .split(',')
-            .map(label => label.trim())
-            .filter(label => 
-              label.length > 0 && 
-              !label.includes('image') && 
-              !label.includes('.') &&  // Remove any remaining sentences
-              label.split(' ').length <= 3  // Limit to 3 words max per label
-            )
-
-          return {
-            promptId: prompt.id,
-            promptText: prompt.promptText,
-            labels: cleanedLabels
-          }
-        } catch (err) {
-          const promptError = err as Error
-          console.error('Error processing individual prompt:', {
-            promptName: prompt.name,
-            error: promptError
-          })
-          throw promptError
-        }
-      }))
-
-      res.json(results)
-    } catch (err) {
-      const apiError = err as Error
-      console.error('OpenAI API Error:', apiError)
-      throw apiError
-    }
-  } catch (err) {
-    const error = err as Error
-    console.error('Server Error:', {
-      name: error.name,
-      message: error.message,
-      stack: error.stack
-    })
-    res.status(500).json({ 
-      error: 'Failed to generate labels',
-      details: error.message
-    })
-  }
-})
+// Use the generate-labels router
+app.use('/api', generateLabelsRouter)
 
 // Update the stats endpoint
 app.get('/api/stats', async (req, res) => {
   try {
-    const stats = await prisma.prompt.findMany({
-      select: {
-        name: true,
-        _count: {
-          select: {
-            votes: true
-          }
-        },
-        votes: {
-          select: {
-            score: true
-          }
-        }
-      }
-    })
+    const prompts = await prisma.prompt.findMany()
 
-    const summary = stats.map((prompt: { name: string; votes: { score: string }[] }) => {
-      const goodVotes = prompt.votes.filter((v: { score: string }) => v.score === 'good').length
-      const okVotes = prompt.votes.filter((v: { score: string }) => v.score === 'ok').length
-      const badVotes = prompt.votes.filter((v: { score: string }) => v.score === 'bad').length
-      const total = prompt.votes.length
-
+    const summary = prompts.map((prompt: PromptWithData) => {
       return {
         prompt: prompt.name,
-        total,
+        total: prompt.totalVotes,
         distribution: {
-          good: `${goodVotes} (${Math.round((goodVotes/total) * 100)}%)`,
-          ok: `${okVotes} (${Math.round((okVotes/total) * 100)}%)`,
-          bad: `${badVotes} (${Math.round((badVotes/total) * 100)}%)`
+          good: `${prompt.goodVotes} (${prompt.goodPercentage}%)`,
+          ok: `${prompt.okVotes} (${prompt.okPercentage}%)`,
+          bad: `${prompt.badVotes} (${prompt.badPercentage}%)`
         }
       }
     })

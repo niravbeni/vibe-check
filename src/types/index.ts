@@ -4,23 +4,23 @@ export interface CustomImageData {
 }
 
 export interface PromptResult {
-  promptId: string;
-  promptText: string;
+  promptId: number;
   labels: string[];
 }
 
 export interface PromptData {
-  id: string;
+  id: number;
   name: string;
+  text: string;
   votes: {
     good: number;
     ok: number;
     bad: number;
   };
+  totalVotes: number;
   percentages: {
     good: number;
     ok: number;
     bad: number;
   };
-  totalVotes: number;
 } 
