@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { CustomImageData, PromptData } from './types/index'
+import { CustomImageData, PromptData, LabelCategories } from './types/index'
 import { ImageContainer } from './components/ImageContainer/ImageContainer'
 import { Container, GenerateButton, TitleCheckmark, LoadingBar, SuccessCheckmark } from './App.styles'
 import { GlobalStyles } from './styles/GlobalStyles'
@@ -12,7 +12,13 @@ function App() {
     { url: '', base64: '' },
     { url: '', base64: '' }
   ])
-  const [labels, setLabels] = useState<string[]>([])
+  const [labelCategories, setLabelCategories] = useState<LabelCategories>({
+    mood: [],
+    style: [],
+    colors: [],
+    materials: [],
+    aesthetic: []
+  })
   const [showResults, setShowResults] = useState(false)
   const [promptData, setPromptData] = useState<PromptData | null>(null)
   const [showRankings, setShowRankings] = useState(false)
@@ -106,12 +112,15 @@ function App() {
       }
       
       const data = await response.json()
-      setLabels(data.labels)
+      setLabelCategories(data.categories)
     } catch (error) {
       console.error('Error generating labels:', error)
       alert('Error generating labels. Please try again.')
     }
   }
+
+  // Helper function to get total number of labels
+  const totalLabels = Object.values(labelCategories).reduce((sum, arr) => sum + arr.length, 0)
 
   const handleStart = async () => {
     setIsGenerating(true)
@@ -121,6 +130,10 @@ function App() {
       console.error('Error starting the process:', error)
     }
     setIsGenerating(false)
+  }
+
+  const handleRefresh = () => {
+    window.location.reload();
   }
 
   return (
@@ -141,11 +154,11 @@ function App() {
         
         <ImageContainer 
           images={images}
-          onImageUpload={!labels.length ? handleImageUpload : undefined}
-          onImageDelete={!labels.length ? handleImageDelete : undefined}
+          onImageUpload={!totalLabels ? handleImageUpload : undefined}
+          onImageDelete={!totalLabels ? handleImageDelete : undefined}
         />
 
-        {!labels.length && !isGenerating && (
+        {!totalLabels && !isGenerating && (
           <GenerateButton 
             onClick={handleStart}
             disabled={!images.every(img => img.url)}
@@ -158,9 +171,9 @@ function App() {
           <LoadingBar />
         )}
 
-        {labels.length > 0 && !showResults && promptData && (
+        {totalLabels > 0 && !showResults && promptData && (
           <ButtonCard
-            labels={labels}
+            labelCategories={labelCategories}
             onEvaluate={handleEvaluation}
             isLoading={false}
             isFinalPrompt={true}
@@ -174,7 +187,7 @@ function App() {
             color: 'white',
             paddingBottom: '2rem'
           }}>
-            <SuccessCheckmark />
+            <SuccessCheckmark onClick={handleRefresh} style={{ cursor: 'pointer' }} />
             <h2>Thank you for your feedback!</h2>
             <p>Your responses have been recorded.</p>
           </div>

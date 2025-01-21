@@ -1,68 +1,105 @@
-import React, { useState, useEffect } from 'react'
-import { 
-  CardContainer, 
-  Card, 
-  InstructionText,
-  LabelsList,
+import { LabelCategories } from '../../types/index'
+import { useState, useEffect } from 'react'
+import {
+  CardContainer,
+  Card,
   Label,
-  ButtonsContainer,
-  ActionButton,
+  ButtonGroup,
+  EvalButton,
   SubmitButton,
+  LabelsList,
+  CategoryKey,
+  CategoryItem,
+  ColorDot
 } from './EvaluationCard.styles'
 
 interface ButtonCardProps {
-  labels: string[];
+  labelCategories: LabelCategories;
   onEvaluate: (score: 'good' | 'bad' | 'ok') => void;
   isLoading: boolean;
   isFinalPrompt: boolean;
 }
 
-export const ButtonCard: React.FC<ButtonCardProps> = ({ 
-  labels, 
-  onEvaluate,
-  isFinalPrompt
-}) => {
-  const [selectedScore, setSelectedScore] = useState<'good' | 'bad' | 'ok' | null>(null)
+export const ButtonCard = ({ labelCategories, onEvaluate, isLoading, isFinalPrompt }: ButtonCardProps) => {
+  const [selectedScore, setSelectedScore] = useState<'good' | 'bad' | 'ok' | null>(null);
+  const categories = ['mood', 'style', 'colors', 'materials', 'aesthetic'] as const;
+  const displayNames = {
+    mood: 'Mood',
+    style: 'Style',
+    colors: 'Colors',
+    materials: 'Materials',
+    aesthetic: 'Aesthetic'
+  };
 
+  // Map old category names to new ones
+  const categoryMapping = {
+    mood: 'mood',
+    brand: 'style',
+    colors: 'colors',
+    materials: 'materials',
+    aesthetics: 'aesthetic'
+  };
+  
   // Reset selection when labels change
   useEffect(() => {
-    setSelectedScore(null)
-  }, [labels])
+    setSelectedScore(null);
+  }, [labelCategories]);
+
+  // Create flat array of labels with their categories, mapping old categories to new ones
+  const allLabels = Object.entries(labelCategories).flatMap(([oldCategory, labels]: [string, string[]]) => 
+    (labels || []).map(label => ({
+      label,
+      category: categoryMapping[oldCategory as keyof typeof categoryMapping] || oldCategory
+    }))
+  );
 
   return (
     <CardContainer>
       <Card>
-        <InstructionText>
-          Please rate how accurately these labels capture your images and inspiration.
-        </InstructionText>
+        <CategoryKey>
+          {categories.map(category => (
+            <CategoryItem key={category}>
+              <ColorDot category={category} />
+              {displayNames[category]}
+            </CategoryItem>
+          ))}
+        </CategoryKey>
+
         <LabelsList>
-          {labels.map((label, index) => (
-            <Label key={index}>{label}</Label>
+          {allLabels.map(({ label, category }, index) => (
+            <Label key={`${category}-${index}`} category={category}>
+              {label}
+            </Label>
           ))}
         </LabelsList>
-        <ButtonsContainer>
-          <ActionButton 
-            onClick={() => setSelectedScore('bad')} 
-            $variant="bad"
-            $selected={selectedScore === 'bad'}
-          >
-            👎 Bad
-          </ActionButton>
-          <ActionButton 
-            onClick={() => setSelectedScore('ok')} 
-            $variant="ok"
-            $selected={selectedScore === 'ok'}
-          >
-            😐 Okay
-          </ActionButton>
-          <ActionButton 
+
+        <ButtonGroup>
+          <EvalButton 
             onClick={() => setSelectedScore('good')} 
-            $variant="good"
-            $selected={selectedScore === 'good'}
+            disabled={isLoading} 
+            color="green"
+            aria-selected={selectedScore === 'good'}
           >
             👍 Good
-          </ActionButton>
-        </ButtonsContainer>
+          </EvalButton>
+          <EvalButton 
+            onClick={() => setSelectedScore('ok')} 
+            disabled={isLoading} 
+            color="yellow"
+            aria-selected={selectedScore === 'ok'}
+          >
+            👌 OK
+          </EvalButton>
+          <EvalButton 
+            onClick={() => setSelectedScore('bad')} 
+            disabled={isLoading} 
+            color="red"
+            aria-selected={selectedScore === 'bad'}
+          >
+            👎 Bad
+          </EvalButton>
+        </ButtonGroup>
+
         <SubmitButton 
           onClick={() => selectedScore && onEvaluate(selectedScore)}
           disabled={!selectedScore}

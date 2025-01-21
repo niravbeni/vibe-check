@@ -58,7 +58,8 @@ export const TitleCheckmark = styled.button`
   }
 
   &:hover {
-    opacity: 0.8;
+    transform: scale(1.01);
+    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
   }
 `
 
@@ -164,8 +165,15 @@ export const SuccessCheckmark = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto 1.5rem;  // Center horizontally with auto margins
+  margin: 0 auto 1.5rem;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  cursor: pointer;
+
+  &:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+  }
 
   &::before {
     content: '✓';

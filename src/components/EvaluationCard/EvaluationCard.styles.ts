@@ -31,19 +31,52 @@ export const InstructionText = styled.p`
   max-width: 400px;
 `
 
-export const LabelsList = styled.div`  display: flex;
+export const LabelsList = styled.div`
+  display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
   justify-content: center;
 `
 
-export const Label = styled.span`
-  background: #f7fafc;
-  color: #4a5568;
-  padding: 0.35rem 0.75rem;
-  border-radius: 999px;
-  font-size: 0.8rem;
+export const Label = styled.span<{ category: string }>`
+  background-color: ${props => {
+    switch (props.category) {
+      case 'mood':
+        return '#E8F5E9'; // light green
+      case 'style':
+        return '#E3F2FD'; // light blue
+      case 'colors':
+        return '#FFF3E0'; // light orange
+      case 'materials':
+        return '#F3E5F5'; // light purple
+      case 'aesthetic':
+        return '#FFEBEE'; // light red
+      default:
+        return '#f0f0f0';
+    }
+  }};
+  color: ${props => {
+    switch (props.category) {
+      case 'mood':
+        return '#2E7D32'; // dark green
+      case 'style':
+        return '#1565C0'; // dark blue
+      case 'colors':
+        return '#E65100'; // dark orange
+      case 'materials':
+        return '#6A1B9A'; // dark purple
+      case 'aesthetic':
+        return '#C62828'; // dark red
+      default:
+        return '#333';
+    }
+  }};
+  padding: 0.25rem 0.75rem;
+  border-radius: 1rem;
+  font-size: 0.875rem;
+  margin: 0.25rem;
 `
 
 export const ButtonsContainer = styled.div`
@@ -164,4 +197,115 @@ export const LoadingText = styled.div`
   justify-content: center;
   gap: 0.25rem;
   font-weight: 900;
+`
+
+export const Title = styled.h2`
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: #333;
+`
+
+export const LabelSection = styled.div`
+  margin-bottom: 1.5rem;
+`
+
+export const CategoryTitle = styled.h3`
+  font-size: 1rem;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  color: #666;
+  text-transform: capitalize;
+`
+
+export const ButtonGroup = styled.div`
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #eee;
+`
+
+export const EvalButton = styled.button<{ color: 'green' | 'yellow' | 'red' }>`
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  
+  ${props => {
+    switch(props.color) {
+      case 'green':
+        return `
+          background-color: ${props['aria-selected'] ? '#4CAF50' : '#E8F5E9'};
+          color: ${props['aria-selected'] ? 'white' : '#2E7D32'};
+          &:hover:not(:disabled) { background-color: #4CAF50; color: white; }
+        `
+      case 'yellow':
+        return `
+          background-color: ${props['aria-selected'] ? '#FFC107' : '#FFF8E1'};
+          color: ${props['aria-selected'] ? 'black' : '#F57F17'};
+          &:hover:not(:disabled) { background-color: #FFC107; color: black; }
+        `
+      case 'red':
+        return `
+          background-color: ${props['aria-selected'] ? '#F44336' : '#FFEBEE'};
+          color: ${props['aria-selected'] ? 'white' : '#C62828'};
+          &:hover:not(:disabled) { background-color: #F44336; color: white; }
+        `
+    }
+  }}
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  transform: ${props => props['aria-selected'] ? 'scale(1.05)' : 'scale(1)'};
+
+  &:active {
+    transform: scale(0.98);
+  }
+`
+
+export const CategoryKey = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #eee;
+`
+
+export const CategoryItem = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: #666;
+`
+
+export const ColorDot = styled.div<{ category: string }>`
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: ${props => {
+    switch (props.category) {
+      case 'mood':
+        return '#2E7D32';
+      case 'style':
+        return '#1565C0';
+      case 'colors':
+        return '#E65100';
+      case 'materials':
+        return '#6A1B9A';
+      case 'aesthetic':
+        return '#C62828';
+      default:
+        return '#333';
+    }
+  }};
 ` 

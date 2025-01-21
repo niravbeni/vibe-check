@@ -25,6 +25,14 @@ type ChatCompletionContentPart = {
   image_url: ImageURL;
 }
 
+interface LabelCategories {
+  mood: string[];
+  style: string[];
+  colors: string[];
+  materials: string[];
+  aesthetic: string[];
+}
+
 router.post('/generate-labels', async (req, res) => {
   try {
     const { images } = req.body as { images: ImageData[] }
@@ -36,29 +44,33 @@ router.post('/generate-labels', async (req, res) => {
     const messages = [
       {
         role: "system" as const,
-        content: "You are a comprehensive style analyzer. Analyze the images and provide relevant labels that capture: \n\
-1. Overall mood and theme \n\
-2. Brand essence and style \n\
-3. Colors and color palette \n\
-4. Materials and textures \n\
-5. Clothing aesthetics and design elements \n\
+        content: "You are a comprehensive style analyzer. Analyze the images and provide categorized labels in this exact format:\n\
+MOOD: label1, label2, label3\n\
+STYLE: label1, label2, label3\n\
+COLORS: label1, label2, label3\n\
+MATERIALS: label1, label2, label3\n\
+AESTHETIC: label1, label2, label3\n\
 \n\
 IMPORTANT RULES:\n\
-- Return ONLY single words or hyphenated terms (e.g., 'minimalist', 'earth-toned', 'silk-blend')\n\
+- Each category MUST start with the exact category name in caps followed by colon\n\
+- Within each category, use ONLY single words or hyphenated terms (e.g., 'minimalist', 'earth-toned', 'silk-blend')\n\
 - NO phrases or full sentences\n\
 - NO image numbering or prefixes\n\
-- NO categories or headers\n\
-- Separate all labels with commas\n\
+- Separate labels within categories with commas\n\
 \n\
-GOOD EXAMPLES: minimalist, earth-toned, silk-blend, tailored, urban-chic\n\
-BAD EXAMPLES: 'Image 1:', 'clean lines and casual elegance', 'sophisticated style with bold colors'"
+GOOD EXAMPLES:\n\
+MOOD: minimalist, serene, sophisticated\n\
+STYLE: luxury, contemporary, high-end\n\
+COLORS: earth-toned, cream, charcoal-grey\n\
+MATERIALS: silk-blend, wool, textured-cotton\n\
+AESTHETIC: tailored, urban-chic, structured"
       },
       {
         role: "user" as const,
         content: [
           {
             type: "text" as const,
-            text: "Analyze these images and provide relevant style labels. Use only single words or hyphenated terms."
+            text: "Analyze these images and provide categorized style labels. Use only single words or hyphenated terms."
           },
           ...images.map(img => ({
             type: "image_url" as const,
@@ -78,9 +90,28 @@ BAD EXAMPLES: 'Image 1:', 'clean lines and casual elegance', 'sophisticated styl
     })
 
     const labelsText = response.choices[0]?.message?.content || ''
-    const labels = labelsText.split(',').map((label: string) => label.trim())
+    
+    // Parse the categorized labels
+    const categories: LabelCategories = {
+      mood: [],
+      style: [],
+      colors: [],
+      materials: [],
+      aesthetic: []
+    }
 
-    res.json({ labels })
+    const lines = labelsText.split('\n')
+    lines.forEach(line => {
+      const [category, labels] = line.split(':')
+      if (labels) {
+        const categoryKey = category.trim().toLowerCase() as keyof LabelCategories
+        if (categoryKey in categories) {
+          categories[categoryKey] = labels.split(',').map(label => label.trim()).filter(Boolean)
+        }
+      }
+    })
+
+    res.json({ categories })
   } catch (error) {
     console.error('Error generating labels:', error)
     res.status(500).json({ error: 'Failed to generate labels' })

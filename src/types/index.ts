@@ -3,6 +3,14 @@ export interface CustomImageData {
   base64: string;
 }
 
+export interface LabelCategories {
+  mood: string[];
+  style: string[];
+  colors: string[];
+  materials: string[];
+  aesthetic: string[];
+}
+
 export interface PromptResult {
   promptId: number;
   labels: string[];
