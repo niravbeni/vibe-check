@@ -1,49 +1,25 @@
-import { useState } from 'react'
-import { 
-  RankingsContainer, 
-  RankingCard, 
-  ToggleButton,
+import { PromptData } from '../../types/index'
+import {
+  RankingsContainer,
+  RankingCard,
   ProgressBar,
   Score,
   PromptName,
   Stats
 } from './PromptRankings.styles'
 
-interface RankingsProps {
-  prompts: {
-    name: string;
-    votes: {
-      good: number;
-      ok: number;
-      bad: number;
-    };
-    percentages: {
-      good: number;
-      ok: number;
-      bad: number;
-    };
-    totalVotes: number;
-  }[];
+interface PromptRankingsProps {
+  prompts: PromptData[]
+  showRankings: boolean
 }
 
-export const PromptRankings = ({ prompts }: RankingsProps) => {
-  const [showRankings, setShowRankings] = useState(false)
-
-  if (!showRankings) {
-    return (
-      <ToggleButton onClick={() => setShowRankings(true)}>
-        Show Prompt Rankings
-      </ToggleButton>
-    )
-  }
+export const PromptRankings = ({ prompts, showRankings }: PromptRankingsProps) => {
+  if (!prompts.length || !showRankings) return null
 
   return (
     <RankingsContainer>
-      <ToggleButton onClick={() => setShowRankings(false)}>
-        Hide Rankings
-      </ToggleButton>
-      {prompts.map((prompt, index) => (
-        <RankingCard key={index}>
+      {prompts.map((prompt) => (
+        <RankingCard key={prompt.id}>
           <PromptName>{prompt.name}</PromptName>
           <Stats>
             <Score>Good: {prompt.votes.good}</Score>

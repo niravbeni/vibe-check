@@ -2,25 +2,26 @@ import React, { useState, useEffect } from 'react'
 import { 
   CardContainer, 
   Card, 
-  PromptName,
+  InstructionText,
   LabelsList,
   Label,
   ButtonsContainer,
   ActionButton,
-  SubmitButton
+  SubmitButton,
+  LoadingText,
+  LoadingDots
 } from './EvaluationCard.styles'
 
 interface ButtonCardProps {
-  name: string
-  promptText: string  // We'll keep this in the props but not display it
-  labels: string[]
-  onEvaluate: (score: 'good' | 'bad' | 'ok') => void
-  isLoading?: boolean
-  isFinalPrompt?: boolean
+  promptText: string;
+  labels: string[];
+  onEvaluate: (score: 'good' | 'bad' | 'ok') => void;
+  isLoading: boolean;
+  isFinalPrompt: boolean;
 }
 
 export const ButtonCard: React.FC<ButtonCardProps> = ({ 
-  name, 
+  promptText, 
   labels, 
   onEvaluate,
   isLoading,
@@ -31,16 +32,18 @@ export const ButtonCard: React.FC<ButtonCardProps> = ({
   // Reset selection when prompt changes
   useEffect(() => {
     setSelectedScore(null)
-  }, [name, labels]) // Reset when prompt content changes
+  }, [promptText, labels]) // Reset when prompt content changes
 
   return (
     <CardContainer>
       <Card>
-        <PromptName>{name}</PromptName>
+        <InstructionText>
+          Please rate how accurately these labels capture your images and inspiration
+        </InstructionText>
         {isLoading ? (
-          <div style={{ textAlign: 'center', padding: '2rem' }}>
-            Generating labels...
-          </div>
+          <LoadingText>
+            Generating<LoadingDots />
+          </LoadingText>
         ) : (
           <>
             <LabelsList>

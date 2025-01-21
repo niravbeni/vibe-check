@@ -10,7 +10,7 @@ export const Card = styled.div`
   position: relative;
   background: white;
   border-radius: 12px;
-  padding: 1rem;
+  padding: 2rem 1rem;
   padding-bottom: 3rem;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 `
@@ -22,8 +22,16 @@ export const PromptName = styled.h2`
   text-align: center;
 `
 
-export const LabelsList = styled.div`
-  display: flex;
+export const InstructionText = styled.p`
+  color: #4b5563;
+  font-size: 0.95rem;
+  font-weight: 800;
+  text-align: center;
+  margin: 0 auto 2em auto;
+  max-width: 400px;
+`
+
+export const LabelsList = styled.div`  display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
   margin-bottom: 1.5rem;
@@ -49,45 +57,54 @@ export const ActionButton = styled.button<{
   $variant: 'good' | 'bad' | 'ok';
   $selected?: boolean;
 }>`
-  padding: 0.5rem 1rem;
+  padding: 0.75rem 1.5rem;
   border-radius: 8px;
   border: none;
   cursor: pointer;
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   font-weight: 500;
-  transition: all 0.2s ease;
-  opacity: ${props => props.$selected ? 1 : 0.7};
-  transform: ${props => props.$selected ? 'scale(1.05)' : 'scale(1)'};
+  transition: all 0.15s ease;
+  outline: none;
 
   ${props => {
     switch (props.$variant) {
       case 'good':
         return `
-          background-color: ${props.$selected ? '#86efac' : '#dcfce7'};
-          color: #166534;
-          &:hover { background-color: #bbf7d0; }
+          background-color: ${props.$selected ? '#22c55e' : '#dcfce7'};
+          color: ${props.$selected ? 'white' : '#166534'};
+          &:hover { background-color: #22c55e; color: white; }
         `
       case 'bad':
         return `
-          background-color: #fee2e2;
-          color: #991b1b;
-          &:hover { background-color: #fecaca; }
+          background-color: ${props.$selected ? '#ef4444' : '#fee2e2'};
+          color: ${props.$selected ? 'white' : '#991b1b'};
+          &:hover { background-color: #ef4444; color: white; }
         `
       case 'ok':
         return `
-          background-color: #fef3c7;
-          color: #92400e;
-          &:hover { background-color: #fde68a; }
+          background-color: ${props.$selected ? '#eab308' : '#fef3c7'};
+          color: ${props.$selected ? 'white' : '#92400e'};
+          &:hover { background-color: #eab308; color: white; }
         `
     }
   }}
 
-  &:hover {
-    transform: translateY(-1px);
+  &:focus {
+    outline: none;
   }
 
+  &:focus-visible {
+    outline: none;
+  }
+
+  &::-moz-focus-inner {
+    border: 0;
+  }
+
+  transform: ${props => props.$selected ? 'scale(1.05)' : 'scale(1)'};
+
   &:active {
-    transform: translateY(0);
+    transform: scale(0.98);
   }
 `
 
@@ -121,4 +138,30 @@ export const SubmitButton = styled.button<{
     content: '→';
     font-size: 1.5rem;
   }
+`
+
+export const LoadingDots = styled.span`
+  &::after {
+    content: '';
+    animation: dots 1.5s steps(5, end) infinite;
+  }
+
+  @keyframes dots {
+    0%, 20% { content: ''; }
+    40% { content: '.'; }
+    60% { content: '..'; }
+    80%, 100% { content: '...'; }
+  }
+`
+
+export const LoadingText = styled.div`
+  text-align: center;
+  padding: 2rem;
+  color: white;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  font-weight: 900;
 ` 

@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react'
 import { PromptResult, CustomImageData, PromptData } from './types/index'
 import { ImageContainer } from './components/ImageContainer/ImageContainer'
-import { Container, GenerateButton } from './App.styles'
-import { Prompt } from './config/prompts'
+import { Container, GenerateButton, TitleCheckmark, LoadingBar, SuccessCheckmark } from './App.styles'
 import { GlobalStyles } from './styles/GlobalStyles'
 import { ButtonCard } from './components/EvaluationCard/EvaluationCard'
 import { PromptRankings } from './components/PromptRankings/PromptRankings'
@@ -16,9 +15,9 @@ function App() {
   const [promptResults, setPromptResults] = useState<PromptResult[]>([])
   const [currentIndex, setCurrentIndex] = useState(0)
   const [showResults, setShowResults] = useState(false)
-  const [prompts, setPrompts] = useState<Prompt[]>([])
-  const [isGenerating, setIsGenerating] = useState(false)
   const [promptsData, setPromptsData] = useState<PromptData[]>([])
+  const [showRankings, setShowRankings] = useState(false)
+  const [isGenerating, setIsGenerating] = useState(false)
 
   // Fetch prompts when component mounts
   useEffect(() => {
@@ -29,7 +28,6 @@ function App() {
           throw new Error('Failed to fetch prompts')
         }
         const data = await response.json()
-        setPrompts(data.prompts)
         setPromptsData(data.prompts)
       } catch (error) {
         console.error('Error fetching prompts:', error)
@@ -183,9 +181,17 @@ function App() {
     <>
       <GlobalStyles />
       <Container>
-        <h1>Vibe Check</h1>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <h1>Vibe Check</h1>
+          <TitleCheckmark
+            onClick={() => setShowRankings(!showRankings)}
+            title={showRankings ? "Hide rankings" : "Show rankings"}
+          >
+            ✅
+          </TitleCheckmark>
+        </div>
         
-        <PromptRankings prompts={promptsData} />
+        <PromptRankings prompts={promptsData} showRankings={showRankings} />
         
         <ImageContainer 
           images={images}
@@ -193,19 +199,21 @@ function App() {
           onImageDelete={!promptResults.length ? handleImageDelete : undefined}
         />
 
-        {!promptResults.length && (
+        {!promptResults.length && !isGenerating && (
           <GenerateButton 
             onClick={handleStart}
-            disabled={isGenerating || !images.every(img => img.url)}
+            disabled={!images.every(img => img.url)}
           >
-            {isGenerating ? 'Generating...' : 
-             !images.every(img => img.url) ? 'Upload Images' : 'Start'}
+            {!images.every(img => img.url) ? 'Upload Images!' : 'Start'}
           </GenerateButton>
+        )}
+
+        {isGenerating && (
+          <LoadingBar />
         )}
 
         {promptResults.length > 0 && !showResults && (
           <ButtonCard
-            name={prompts?.find(p => p.id === promptResults[currentIndex]?.promptId)?.name || ''}
             promptText={promptResults[currentIndex]?.promptText || ''}
             labels={promptResults[currentIndex]?.labels || []}
             onEvaluate={handleEvaluation}
@@ -215,21 +223,13 @@ function App() {
         )}
 
         {showResults && (
-          <div style={{ textAlign: 'center', marginTop: '2rem' }}>
-            <div style={{ 
-              width: '80px', 
-              height: '80px', 
-              borderRadius: '50%', 
-              backgroundColor: '#22c55e',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              margin: '0 auto 1.5rem',
-              color: 'white',
-              fontSize: '2.5rem'
-            }}>
-              ✓
-            </div>
+          <div style={{ 
+            textAlign: 'center', 
+            marginTop: '3rem',
+            color: 'white',
+            paddingBottom: '2rem'
+          }}>
+            <SuccessCheckmark />
             <h2>Thank you for your feedback!</h2>
             <p>Your responses have been recorded.</p>
           </div>
