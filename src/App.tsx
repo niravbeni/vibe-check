@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { PromptResult, Evaluation } from './types'
+import { PromptResult, CustomImageData, PromptData } from './types/index'
 import { ImageContainer } from './components/ImageContainer/ImageContainer'
 import { Container, GenerateButton } from './App.styles'
 import { Prompt } from './config/prompts'
@@ -7,14 +7,8 @@ import { GlobalStyles } from './styles/GlobalStyles'
 import { ButtonCard } from './components/EvaluationCard/EvaluationCard'
 import { PromptRankings } from './components/PromptRankings/PromptRankings'
 
-// Define the ImageData type here or in a separate types file
-interface ImageData {
-  url: string;
-  base64: string;
-}
-
 function App() {
-  const [images, setImages] = useState<ImageData[]>([
+  const [images, setImages] = useState<CustomImageData[]>([
     { url: '', base64: '' },
     { url: '', base64: '' },
     { url: '', base64: '' }
@@ -24,14 +18,12 @@ function App() {
   const [showResults, setShowResults] = useState(false)
   const [prompts, setPrompts] = useState<Prompt[]>([])
   const [isGenerating, setIsGenerating] = useState(false)
-  const [isLoadingPrompts, setIsLoadingPrompts] = useState(true)
-  const [promptsData, setPromptsData] = useState<any[]>([])
+  const [promptsData, setPromptsData] = useState<PromptData[]>([])
 
   // Fetch prompts when component mounts
   useEffect(() => {
     const fetchPrompts = async () => {
       try {
-        setIsLoadingPrompts(true)
         const response = await fetch('http://localhost:3000/api/prompts')
         if (!response.ok) {
           throw new Error('Failed to fetch prompts')
@@ -41,8 +33,6 @@ function App() {
         setPromptsData(data.prompts)
       } catch (error) {
         console.error('Error fetching prompts:', error)
-      } finally {
-        setIsLoadingPrompts(false)
       }
     }
 
@@ -130,7 +120,7 @@ function App() {
     try {
       console.log('Starting label generation...')
       const loadedImages = await Promise.all(
-        images.map(async img => {
+        images.map(async (img: CustomImageData) => {
           if (!img.url) return img
           try {
             const response = await fetch(img.url)
@@ -139,7 +129,6 @@ function App() {
               const reader = new FileReader()
               reader.onload = () => {
                 if (typeof reader.result === 'string') {
-                  // Keep the full data URL
                   resolve(reader.result)
                 }
               }

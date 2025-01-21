@@ -3,7 +3,6 @@ import OpenAI from 'openai'
 import cors from 'cors'
 import dotenv from 'dotenv'
 import prisma from './lib/prisma'
-import { type PrismaClient } from '@prisma/client'
 import { randomUUID } from 'crypto'
 
 dotenv.config()
@@ -21,18 +20,35 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 })
 
-type Vote = NonNullable<Awaited<ReturnType<PrismaClient['vote']['findFirst']>>>
-type PromptWithVotes = NonNullable<Awaited<ReturnType<PrismaClient['prompt']['findFirst']>> & {
-  votes: Vote[]
-}>
+// Define types for our data structures
+type Vote = {
+  score: string;
+  id: string;
+}
 
-// Define valid scores as constants
-const VALID_SCORES = ['good', 'bad', 'ok'] as const
-type ValidScore = typeof VALID_SCORES[number]
+type PromptWithVoteData = {
+  id: string;
+  name: string;
+  promptText: string;
+  systemPrompt: string | null;
+  votes: Vote[];
+}
 
-// Update score validation
-const isValidScore = (score: any): score is ValidScore => {
-  return VALID_SCORES.includes(score)
+type VoteCount = {
+  good: number;
+  ok: number;
+  bad: number;
+}
+
+type PromptSummary = {
+  id: string;
+  name: string;
+  promptText: string;
+  systemPrompt: string | null;
+  votes: VoteCount;
+  percentages: VoteCount;
+  totalVotes: number;
+  summary: string;
 }
 
 // Get all prompts with their vote counts
@@ -40,7 +56,6 @@ app.get('/api/prompts', async (req, res) => {
   try {
     console.log('Fetching prompts...')
     
-    // First, get all prompts with their votes
     const prompts = await prisma.prompt.findMany({
       select: {
         id: true,
@@ -58,7 +73,6 @@ app.get('/api/prompts', async (req, res) => {
     console.log('Found prompts:', prompts)
 
     if (!prompts || prompts.length === 0) {
-      console.log('No prompts found')
       return res.json({
         prompts: [],
         totalStats: {
@@ -69,11 +83,11 @@ app.get('/api/prompts', async (req, res) => {
     }
 
     // Transform the data to include vote counts
-    const promptsWithCounts = prompts.map(prompt => {
+    const promptsWithCounts: PromptSummary[] = prompts.map((prompt: PromptWithVoteData) => {
       const voteCount = {
-        good: prompt.votes.filter(v => v.score === 'good').length,
-        ok: prompt.votes.filter(v => v.score === 'ok').length,
-        bad: prompt.votes.filter(v => v.score === 'bad').length
+        good: prompt.votes.filter((v: Vote) => v.score === 'good').length,
+        ok: prompt.votes.filter((v: Vote) => v.score === 'ok').length,
+        bad: prompt.votes.filter((v: Vote) => v.score === 'bad').length
       }
       
       const totalVotes = voteCount.good + voteCount.ok + voteCount.bad
@@ -96,13 +110,13 @@ app.get('/api/prompts', async (req, res) => {
     })
 
     // Sort by total votes or percentage of good votes
-    promptsWithCounts.sort((a, b) => b.votes.good - a.votes.good)
+    promptsWithCounts.sort((a: PromptSummary, b: PromptSummary) => b.votes.good - a.votes.good)
 
     const response = {
       prompts: promptsWithCounts,
       totalStats: {
-        totalVotes: promptsWithCounts.reduce((sum, p) => sum + p.totalVotes, 0),
-        byPrompt: promptsWithCounts.map(p => p.summary)
+        totalVotes: promptsWithCounts.reduce((sum: number, p: PromptSummary) => sum + p.totalVotes, 0),
+        byPrompt: promptsWithCounts.map((p: PromptSummary) => p.summary)
       }
     }
 
@@ -176,19 +190,12 @@ app.post('/api/prompts/:promptId/vote', async (req, res) => {
   }
 })
 
-// Add type for the prompt parameter
+// Update PromptWithSystem type
 type PromptWithSystem = {
   id: string;
+  name: string;
   promptText: string;
   systemPrompt?: string;
-}
-
-// Add interface for OpenAI error type
-interface OpenAIError extends Error {
-  response?: {
-    data?: unknown;
-    status?: number;
-  };
 }
 
 app.post('/api/generate-labels', async (req, res) => {
@@ -275,7 +282,8 @@ app.post('/api/generate-labels', async (req, res) => {
             promptText: prompt.promptText,
             labels: cleanedLabels
           }
-        } catch (promptError) {
+        } catch (err) {
+          const promptError = err as Error
           console.error('Error processing individual prompt:', {
             promptName: prompt.name,
             error: promptError
@@ -285,11 +293,13 @@ app.post('/api/generate-labels', async (req, res) => {
       }))
 
       res.json(results)
-    } catch (apiError) {
+    } catch (err) {
+      const apiError = err as Error
       console.error('OpenAI API Error:', apiError)
       throw apiError
     }
-  } catch (error) {
+  } catch (err) {
+    const error = err as Error
     console.error('Server Error:', {
       name: error.name,
       message: error.message,
@@ -302,7 +312,7 @@ app.post('/api/generate-labels', async (req, res) => {
   }
 })
 
-// Add an endpoint to get summary statistics
+// Update the stats endpoint
 app.get('/api/stats', async (req, res) => {
   try {
     const stats = await prisma.prompt.findMany({
@@ -321,10 +331,10 @@ app.get('/api/stats', async (req, res) => {
       }
     })
 
-    const summary = stats.map(prompt => {
-      const goodVotes = prompt.votes.filter(v => v.score === 'good').length
-      const okVotes = prompt.votes.filter(v => v.score === 'ok').length
-      const badVotes = prompt.votes.filter(v => v.score === 'bad').length
+    const summary = stats.map((prompt: { name: string; votes: { score: string }[] }) => {
+      const goodVotes = prompt.votes.filter((v: { score: string }) => v.score === 'good').length
+      const okVotes = prompt.votes.filter((v: { score: string }) => v.score === 'ok').length
+      const badVotes = prompt.votes.filter((v: { score: string }) => v.score === 'bad').length
       const total = prompt.votes.length
 
       return {
@@ -339,8 +349,9 @@ app.get('/api/stats', async (req, res) => {
     })
 
     res.json(summary)
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch statistics' })
+  } catch (err) {
+    const error = err as Error
+    res.status(500).json({ error: 'Failed to fetch statistics', details: error.message })
   }
 })
 
