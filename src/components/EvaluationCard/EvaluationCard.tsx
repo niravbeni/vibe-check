@@ -38,7 +38,7 @@ export const ButtonCard: React.FC<ButtonCardProps> = ({
     <CardContainer>
       <Card>
         <InstructionText>
-          Please rate how accurately these labels capture your images and inspiration
+          Please rate how accurately these labels capture your images and inspiration.
         </InstructionText>
         {isLoading ? (
           <LoadingText>
