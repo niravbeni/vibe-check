@@ -5,6 +5,7 @@ import { Container, GenerateButton } from './App.styles'
 import { Prompt } from './config/prompts'
 import { GlobalStyles } from './styles/GlobalStyles'
 import { ButtonCard } from './components/EvaluationCard/EvaluationCard'
+import { PromptRankings } from './components/PromptRankings/PromptRankings'
 
 // Define the ImageData type here or in a separate types file
 interface ImageData {
@@ -23,19 +24,25 @@ function App() {
   const [showResults, setShowResults] = useState(false)
   const [prompts, setPrompts] = useState<Prompt[]>([])
   const [isGenerating, setIsGenerating] = useState(false)
+  const [isLoadingPrompts, setIsLoadingPrompts] = useState(true)
+  const [promptsData, setPromptsData] = useState<any[]>([])
 
   // Fetch prompts when component mounts
   useEffect(() => {
     const fetchPrompts = async () => {
       try {
+        setIsLoadingPrompts(true)
         const response = await fetch('http://localhost:3000/api/prompts')
         if (!response.ok) {
           throw new Error('Failed to fetch prompts')
         }
         const data = await response.json()
-        setPrompts(data)
+        setPrompts(data.prompts)
+        setPromptsData(data.prompts)
       } catch (error) {
         console.error('Error fetching prompts:', error)
+      } finally {
+        setIsLoadingPrompts(false)
       }
     }
 
@@ -70,26 +77,38 @@ function App() {
     }
   }
 
+  const fetchPromptRankings = async () => {
+    try {
+      const response = await fetch('http://localhost:3000/api/prompts')
+      if (!response.ok) {
+        throw new Error('Failed to fetch prompts')
+      }
+      const data = await response.json()
+      setPromptsData(data.prompts)
+    } catch (error) {
+      console.error('Error fetching prompt rankings:', error)
+    }
+  }
+
   const handleEvaluation = async (score: 'good' | 'bad' | 'ok') => {
     try {
-      const newEvaluation: Evaluation = {
-        promptId: promptResults[currentIndex].promptId,
-        score
-      }
+      const promptId = promptResults[currentIndex].promptId
+      console.log('Submitting vote:', { promptId, score })
 
-      // First, try to submit the vote
-      const response = await fetch(`http://localhost:3000/api/prompts/${newEvaluation.promptId}/vote`, {
+      const response = await fetch(`http://localhost:3000/api/prompts/${promptId}/vote`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ score: newEvaluation.score })
+        body: JSON.stringify({ score })
       })
 
       if (!response.ok) {
-        throw new Error('Failed to submit vote')
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to submit vote')
       }
 
-      // If vote was successful, just move to next prompt
-      // Don't need to update promptResults since we're just tracking votes
+      // Fetch updated rankings
+      await fetchPromptRankings()
+
       if (currentIndex < promptResults.length - 1) {
         setCurrentIndex(prev => prev + 1)
       } else {
@@ -177,6 +196,8 @@ function App() {
       <Container>
         <h1>Vibe Check</h1>
         
+        <PromptRankings prompts={promptsData} />
+        
         <ImageContainer 
           images={images}
           onImageUpload={!promptResults.length ? handleImageUpload : undefined}
@@ -195,7 +216,7 @@ function App() {
 
         {promptResults.length > 0 && !showResults && (
           <ButtonCard
-            name={prompts.find(p => p.id === promptResults[currentIndex]?.promptId)?.name || ''}
+            name={prompts?.find(p => p.id === promptResults[currentIndex]?.promptId)?.name || ''}
             promptText={promptResults[currentIndex]?.promptText || ''}
             labels={promptResults[currentIndex]?.labels || []}
             onEvaluate={handleEvaluation}

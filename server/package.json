@@ -5,8 +5,11 @@
   "scripts": {
     "start": "tsx index.ts",
     "dev": "tsx watch index.ts",
-    "reset-db": "rm -f prisma/dev.db && npx prisma migrate reset && npx tsx scripts/seed.ts",
-    "update-prompts": "npx tsx scripts/update-prompts.ts"
+    "reset-db": "rm -f prisma/dev.db && npx prisma migrate reset --force",
+    "update-prompts": "npx tsx scripts/update-prompts.ts",
+    "seed": "npx prisma db seed",
+    "reset-votes": "npx prisma db execute --file ./prisma/reset-votes.sql",
+    "reset-all": "npx prisma migrate reset --force"
   },
   "keywords": [],
   "author": "",
@@ -25,5 +28,9 @@
     "tsx": "^4.7.0",
     "typescript": "^5.3.3"
   },
-  "description": ""
+  "description": "",
+  "prisma": {
+    "schema": "./prisma/schema.prisma",
+    "seed": "tsx prisma/seed.ts"
+  }
 }
