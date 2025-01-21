@@ -36,14 +36,29 @@ router.post('/generate-labels', async (req, res) => {
     const messages = [
       {
         role: "system" as const,
-        content: "You are a comprehensive style analyzer. Analyze the images and provide relevant labels that capture the overall mood, style, theme, and brand essence. Return only the labels as a comma-separated list."
+        content: "You are a comprehensive style analyzer. Analyze the images and provide relevant labels that capture: \n\
+1. Overall mood and theme \n\
+2. Brand essence and style \n\
+3. Colors and color palette \n\
+4. Materials and textures \n\
+5. Clothing aesthetics and design elements \n\
+\n\
+IMPORTANT RULES:\n\
+- Return ONLY single words or hyphenated terms (e.g., 'minimalist', 'earth-toned', 'silk-blend')\n\
+- NO phrases or full sentences\n\
+- NO image numbering or prefixes\n\
+- NO categories or headers\n\
+- Separate all labels with commas\n\
+\n\
+GOOD EXAMPLES: minimalist, earth-toned, silk-blend, tailored, urban-chic\n\
+BAD EXAMPLES: 'Image 1:', 'clean lines and casual elegance', 'sophisticated style with bold colors'"
       },
       {
         role: "user" as const,
         content: [
           {
             type: "text" as const,
-            text: "Analyze these images and provide relevant style labels."
+            text: "Analyze these images and provide relevant style labels. Use only single words or hyphenated terms."
           },
           ...images.map(img => ({
             type: "image_url" as const,
