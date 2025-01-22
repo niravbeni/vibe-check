@@ -6,12 +6,15 @@ services:
       cd server
       npm install
       npm run build
+      echo "Build completed, copying files..."
       mkdir -p dist/src/routes
       cp -r src/routes/* dist/src/routes/
       cp -r lib dist/
+      echo "Files copied, checking contents..."
+      ls -R dist/
       npx prisma generate
       npx prisma migrate deploy
-    startCommand: cd server && npm start
+    startCommand: cd server && NODE_ENV=production npm start
     envVars:
       - key: NODE_ENV
         value: production
