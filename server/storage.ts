@@ -1,7 +1,7 @@
 import fs from 'fs/promises'
 import path from 'path'
-import { PROMPTS } from '../src/config/prompts'
-import { Prompt, Score } from './types'
+import { PROMPTS } from './src/prompts.js'
+import { Prompt, Score } from './types.js'
 
 interface StorageData {
   prompts: Prompt[];
@@ -15,7 +15,7 @@ async function readData(): Promise<StorageData> {
     return JSON.parse(data)
   } catch {
     // Initialize with default prompts
-    const data = { prompts: PROMPTS.map(p => ({ ...p, votes: { good: 0, ok: 0, bad: 0 } })) }
+    const data = { prompts: PROMPTS }
     await fs.writeFile(DATA_FILE, JSON.stringify(data, null, 2))
     return data
   }
@@ -28,7 +28,7 @@ export async function getPrompts(): Promise<Prompt[]> {
 
 export async function saveVote(promptId: string, score: Score): Promise<void> {
   const data = await readData()
-  const prompt = data.prompts.find(p => p.id === promptId)
+  const prompt = data.prompts.find(p => p.name === promptId)
   if (prompt) {
     prompt.votes[score]++
     await fs.writeFile(DATA_FILE, JSON.stringify(data, null, 2))

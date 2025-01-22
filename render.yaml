@@ -2,23 +2,35 @@ services:
   - type: web
     name: vibe-check-server
     env: node
-    buildCommand: cd server && npm install && npx prisma generate
+    buildCommand: |
+      cd server
+      npm install
+      npm run build
+      npx prisma generate
+      npx prisma migrate deploy
     startCommand: cd server && npm start
     envVars:
       - key: NODE_ENV
         value: production
-      - key: PORT
-        value: 10000
       - key: DATABASE_URL
-        sync: false
+        fromDatabase:
+          name: vibe-check-db
+          property: connectionString
       - key: OPENAI_API_KEY
         sync: false
 
   - type: web
     name: vibe-check-client
     env: static
-    buildCommand: npm install && npm run build
+    buildCommand: |
+      npm install
+      npm run build
     staticPublishPath: ./dist
     envVars:
-      - key: NODE_ENV
-        value: production 
+      - key: VITE_API_URL
+        value: https://vibe-check-server.onrender.com
+
+databases:
+  - name: vibe-check-db
+    databaseName: vibecheck
+    plan: free 

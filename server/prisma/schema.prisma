@@ -3,23 +3,23 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = "file:./dev.db"
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model Prompt {
-  id          Int      @id @default(autoincrement())
-  name        String
-  promptText  String   // Changed from 'text' to 'promptText' to match our usage
+  id             Int      @id @default(autoincrement())
+  name           String
+  promptText     String   // Changed from 'text' to 'promptText' to match our usage
   
   // Vote counts
-  goodVotes   Int      @default(0)
-  okVotes     Int      @default(0)
-  badVotes    Int      @default(0)
-  totalVotes  Int      @default(0)
+  goodVotes      Int      @default(0)
+  okVotes        Int      @default(0)
+  badVotes       Int      @default(0)
+  totalVotes     Int      @default(0)
   
   // Percentages
-  goodPercentage Int   @default(0)
-  okPercentage   Int   @default(0)
-  badPercentage  Int   @default(0)
+  goodPercentage Int      @default(0)
+  okPercentage   Int      @default(0)
+  badPercentage  Int      @default(0)
 }

@@ -1,3 +1,5 @@
+export type Score = 'good' | 'ok' | 'bad';
+
 export interface PromptVotes {
   good: number;
   ok: number;
@@ -5,11 +7,7 @@ export interface PromptVotes {
 }
 
 export interface Prompt {
-  id: string;
   name: string;
   promptText: string;
-  systemPrompt: string;
   votes: PromptVotes;
-}
-
-export type Score = 'good' | 'ok' | 'bad'; 
+} 

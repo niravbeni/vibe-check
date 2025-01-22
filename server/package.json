@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "start": "tsx index.ts",
+    "start": "node dist/index.js",
+    "build": "tsc",
     "dev": "tsx watch index.ts",
     "reset-db": "rm -f prisma/dev.db && npx prisma migrate reset --force",
     "update-prompts": "npx tsx scripts/update-prompts.ts",
@@ -20,13 +21,14 @@
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
     "openai": "^4.24.1",
-    "prisma": "^6.2.1"
+    "prisma": "^6.2.1",
+    "typescript": "^5.3.3"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
-    "tsx": "^4.7.0",
-    "typescript": "^5.3.3"
+    "@types/node": "^20.0.0",
+    "tsx": "^4.7.0"
   },
   "description": "",
   "prisma": {

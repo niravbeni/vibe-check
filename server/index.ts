@@ -1,9 +1,9 @@
 import express from 'express'
 import cors from 'cors'
 import dotenv from 'dotenv'
-import prisma from './lib/prisma'
-import generateLabelsRouter from './src/routes/generate-labels'
-import resetVotesRouter from './src/routes/reset-votes'
+import prisma from './lib/prisma.js'
+import generateLabelsRouter from './src/routes/generate-labels.js'
+import resetVotesRouter from './src/routes/reset-votes.js'
 
 dotenv.config()
 
