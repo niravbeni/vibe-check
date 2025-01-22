@@ -1,9 +1,10 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import prisma from '../lib/prisma';
-import generateLabelsRouter from './routes/generate-labels';
-import resetVotesRouter from './routes/reset-votes';
+import prisma from '../lib/prisma.js';
+import generateLabelsRouter from './routes/generate-labels.js';
+import resetVotesRouter from './routes/reset-votes.js';
+import promptsRouter from './routes/prompts.js';
 import type { PrismaClient } from '@prisma/client';
 
 dotenv.config();
@@ -19,6 +20,7 @@ app.use(express.json({ limit: '50mb' }));
 
 // Register routes
 app.use('/api/reset-votes', resetVotesRouter);
+app.use('/api/prompts', promptsRouter);
 app.use('/api', generateLabelsRouter);
 
 interface PromptWithCounts {
@@ -188,7 +190,7 @@ app.post('/api/prompts/:promptId/vote', async (req, res) => {
   }
 });
 
-const port = 3000;
+const port = process.env.PORT || 3000;
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);
 }); 
