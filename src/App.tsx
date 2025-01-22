@@ -101,7 +101,7 @@ function App() {
       }
       
       setPromptData(prompts[0])
-      setShowRankings(true)
+      setShowResults(true)  // Show thank you message instead of rankings
     } catch (error) {
       console.error('Error submitting vote:', error)
     }
