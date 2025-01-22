@@ -10,8 +10,9 @@
     "outDir": "./dist",
     "rootDir": ".",
     "baseUrl": ".",
-    "allowJs": true,
-    "resolveJsonModule": true
+    "paths": {
+      "*": ["*"]
+    }
   },
   "ts-node": {
     "esm": true
