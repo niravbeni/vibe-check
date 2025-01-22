@@ -23,7 +23,7 @@ services:
     name: vibe-check-client
     env: static
     buildCommand: |
-      npm install
+      npm install --legacy-peer-deps
       npm run build
     staticPublishPath: ./dist
     envVars:
