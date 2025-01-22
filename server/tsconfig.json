@@ -18,8 +18,9 @@
     "esm": true
   },
   "include": [
-    "**/*.ts",
-    "**/*.js"
+    "index.ts",
+    "src/**/*.ts",
+    "lib/**/*.ts"
   ],
   "exclude": [
     "node_modules",
