@@ -40,9 +40,9 @@ export const LabelsList = styled.div`
   justify-content: center;
 `
 
-export const Label = styled.span<{ category: string }>`
+export const Label = styled.span<{ $category: string }>`
   background-color: ${props => {
-    switch (props.category) {
+    switch (props.$category) {
       case 'mood':
         return '#E8F5E9'; // light green
       case 'style':
@@ -58,7 +58,7 @@ export const Label = styled.span<{ category: string }>`
     }
   }};
   color: ${props => {
-    switch (props.category) {
+    switch (props.$category) {
       case 'mood':
         return '#2E7D32'; // dark green
       case 'style':
@@ -227,6 +227,29 @@ export const ButtonGroup = styled.div`
   border-top: 1px solid #eee;
 `
 
+export const ResetButton = styled.button`
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  padding: 0.5rem;
+  background: none;
+  border: none;
+  color: #666;
+  cursor: pointer;
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  
+  &:hover {
+    color: #C62828;
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+`
+
 export const EvalButton = styled.button<{ color: 'green' | 'yellow' | 'red' }>`
   padding: 0.5rem 1rem;
   border: none;
@@ -288,24 +311,25 @@ export const CategoryItem = styled.div`
   color: #666;
 `
 
-export const ColorDot = styled.div<{ category: string }>`
+export const ColorDot = styled.div<{ $category: string }>`
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background-color: ${props => {
-    switch (props.category) {
+  margin-right: 8px;
+  background-color: ${({ $category }) => {
+    switch ($category) {
       case 'mood':
-        return '#2E7D32';
+        return '#4A90E2';
       case 'style':
-        return '#1565C0';
+        return '#50C878';
       case 'colors':
-        return '#E65100';
+        return '#FFD700';
       case 'materials':
-        return '#6A1B9A';
+        return '#9370DB';
       case 'aesthetic':
-        return '#C62828';
+        return '#FF6B6B';
       default:
-        return '#333';
+        return '#ccc';
     }
   }};
 ` 

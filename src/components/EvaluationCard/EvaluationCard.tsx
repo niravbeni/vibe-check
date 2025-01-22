@@ -59,7 +59,7 @@ export const ButtonCard = ({ labelCategories, onEvaluate, isLoading, isFinalProm
         <CategoryKey>
           {categories.map(category => (
             <CategoryItem key={category}>
-              <ColorDot category={category} />
+              <ColorDot $category={category} />
               {displayNames[category]}
             </CategoryItem>
           ))}
@@ -67,7 +67,7 @@ export const ButtonCard = ({ labelCategories, onEvaluate, isLoading, isFinalProm
 
         <LabelsList>
           {allLabels.map(({ label, category }, index) => (
-            <Label key={`${category}-${index}`} category={category}>
+            <Label key={`${category}-${index}`} $category={category}>
               {label}
             </Label>
           ))}

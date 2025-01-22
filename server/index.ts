@@ -3,6 +3,7 @@ import cors from 'cors'
 import dotenv from 'dotenv'
 import prisma from './lib/prisma'
 import generateLabelsRouter from './src/routes/generate-labels'
+import resetVotesRouter from './src/routes/reset-votes'
 
 dotenv.config()
 
@@ -210,7 +211,8 @@ app.post('/api/prompts/:promptId/vote', async (req, res) => {
   }
 })
 
-// Use the generate-labels router
+// Register routes
+app.use('/api/reset-votes', resetVotesRouter)
 app.use('/api', generateLabelsRouter)
 
 // Update the stats endpoint
@@ -237,7 +239,7 @@ app.get('/api/stats', async (req, res) => {
   }
 })
 
-const port = 3000
+const port = process.env.PORT || 3000
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`)
 }) 

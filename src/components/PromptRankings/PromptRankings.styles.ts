@@ -89,4 +89,25 @@ export const Stats = styled.div`
   margin-bottom: 0.5rem;
   display: flex;    
   justify-content: space-between;
+`
+
+export const ResetButton = styled.button`
+  background: none;
+  border: none;
+  color: #666;
+  cursor: pointer;
+  font-size: 0.8rem;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-left: auto;
+  
+  &:hover {
+    color: #C62828;
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
 ` 
