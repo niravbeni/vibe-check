@@ -15,8 +15,7 @@ services:
       npx prisma migrate deploy
     startCommand: |
       cd server
-      echo "Starting server with files:"
-      ls -R dist/
+      echo "Starting server in production mode..."
       NODE_ENV=production npm start
     envVars:
       - key: NODE_ENV
