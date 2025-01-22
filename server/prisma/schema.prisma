@@ -9,8 +9,8 @@ datasource db {
 
 model Prompt {
   id             Int      @id @default(autoincrement())
-  name           String
-  promptText     String   // Changed from 'text' to 'promptText' to match our usage
+  name           String   @unique
+  promptText     String
   
   // Vote counts
   goodVotes      Int      @default(0)
@@ -19,7 +19,7 @@ model Prompt {
   totalVotes     Int      @default(0)
   
   // Percentages
-  goodPercentage Int      @default(0)
-  okPercentage   Int      @default(0)
-  badPercentage  Int      @default(0)
+  goodPercentage Float    @default(0)
+  okPercentage   Float    @default(0)
+  badPercentage  Float    @default(0)
 }
