@@ -26,7 +26,7 @@ export const PromptRankings = ({ prompt, showRankings }: PromptRankingsProps) =>
 
   const handleConfirmReset = async () => {
     try {
-      const response = await fetch(`${API_URL}/api/reset-votes`, {
+      const response = await fetch(`${API_URL}/reset-votes`, {
         method: 'POST',
       });
       
