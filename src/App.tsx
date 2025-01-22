@@ -29,7 +29,7 @@ function App() {
   useEffect(() => {
     const fetchPrompt = async () => {
       try {
-        const response = await fetch(`${API_URL}/api/prompts`)
+        const response = await fetch(`${API_URL}/prompts`)
         if (!response.ok) throw new Error('Failed to fetch prompt')
         const data = await response.json()
         setPromptData(data.prompts[0]) // Get the single prompt
@@ -73,7 +73,7 @@ function App() {
     try {
       if (!promptData) return
 
-      const response = await fetch(`${API_URL}/api/prompts/${promptData.id}/vote`, {
+      const response = await fetch(`${API_URL}/prompts/${promptData.id}/vote`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ score })
@@ -84,7 +84,7 @@ function App() {
       }
 
       // Fetch updated rankings
-      const updatedPrompt = await fetch(`${API_URL}/api/prompts`)
+      const updatedPrompt = await fetch(`${API_URL}/prompts`)
       const data = await updatedPrompt.json()
       setPromptData(data.prompts[0])
       setShowResults(true)
@@ -102,7 +102,7 @@ function App() {
 
   const generateLabels = async () => {
     try {
-      const response = await fetch(`${API_URL}/api/generate-labels`, {
+      const response = await fetch(`${API_URL}/generate-labels`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ images })
