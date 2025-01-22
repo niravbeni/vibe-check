@@ -29,7 +29,7 @@ function App() {
   useEffect(() => {
     const fetchPrompt = async () => {
       try {
-        const response = await fetch(`${API_URL}/prompts`)
+        const response = await fetch(`${API_URL}/api/prompts`)
         if (!response.ok) throw new Error('Failed to fetch prompt')
         const prompts = await response.json()
         
@@ -80,7 +80,7 @@ function App() {
     if (!promptData) return
 
     try {
-      const response = await fetch(`${API_URL}/prompts/${promptData.id}/vote`, {
+      const response = await fetch(`${API_URL}/api/prompts/${promptData.id}/vote`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -91,7 +91,7 @@ function App() {
       if (!response.ok) throw new Error('Failed to submit vote')
 
       // Fetch updated prompt data
-      const updatedPrompt = await fetch(`${API_URL}/prompts`)
+      const updatedPrompt = await fetch(`${API_URL}/api/prompts`)
       if (!updatedPrompt.ok) throw new Error('Failed to fetch updated prompt')
       
       const prompts = await updatedPrompt.json()
@@ -116,7 +116,7 @@ function App() {
   const generateLabels = async () => {
     try {
       console.log('Sending images to generate labels:', images)
-      const response = await fetch(`${API_URL}/generate-labels`, {
+      const response = await fetch(`${API_URL}/api/generate-labels`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
