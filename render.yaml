@@ -37,7 +37,7 @@ services:
     staticPublishPath: ./dist
     envVars:
       - key: VITE_API_URL
-        value: https://vibe-check-server.onrender.com/api
+        value: https://vibe-check-server.onrender.com
 
 databases:
   - name: vibe-check-db
