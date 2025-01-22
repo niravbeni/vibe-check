@@ -34,12 +34,18 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });
 });
 
+// List available routes
+const routes = [
+  'GET /api/prompts',
+  'POST /api/prompts/:promptId/vote',
+  'POST /api/generate-labels',
+  'POST /api/reset-votes'
+];
+
+// Start server
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);
   console.log('Available routes:');
-  console.log('- GET /api/prompts');
-  console.log('- POST /api/prompts/:promptId/vote');
-  console.log('- POST /api/generate-labels');
-  console.log('- POST /api/reset-votes');
+  routes.forEach(route => console.log(`- ${route}`));
 }); 
