@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "start": "node dist/index.js",
+    "start": "node dist/src/index.js",
     "build": "tsc && echo 'TypeScript compilation complete'",
-    "dev": "tsx watch index.ts",
+    "dev": "tsx watch src/index.ts",
     "reset-db": "rm -f prisma/dev.db && npx prisma migrate reset --force",
     "update-prompts": "npx tsx scripts/update-prompts.ts",
     "seed": "npx prisma db seed",

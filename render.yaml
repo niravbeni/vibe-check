@@ -7,12 +7,8 @@ services:
       npm install
       echo "Compiling TypeScript..."
       npm run build
-      echo "Build completed, copying files..."
-      mkdir -p dist/src/routes dist/lib
-      cp -r src/routes/* dist/src/routes/
-      cp -r lib/* dist/lib/
-      echo "Files copied, checking contents..."
-      ls -la dist/src/routes/
+      echo "Build completed, checking contents..."
+      ls -la dist/src/
       ls -la dist/lib/
       echo "Generating Prisma client..."
       npx prisma generate
