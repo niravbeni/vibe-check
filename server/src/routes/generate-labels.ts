@@ -33,7 +33,7 @@ interface LabelCategories {
   aesthetic: string[];
 }
 
-router.post('/generate-labels', async (req, res) => {
+router.post('/', async (req, res) => {
   try {
     const { images } = req.body as { images: ImageData[] }
 

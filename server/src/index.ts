@@ -21,7 +21,7 @@ app.use(express.json({ limit: '50mb' }));
 // Register routes
 app.use('/api/reset-votes', resetVotesRouter);
 app.use('/api/prompts', promptsRouter);
-app.use('/api', generateLabelsRouter);
+app.use('/api/generate-labels', generateLabelsRouter);
 
 interface PromptWithCounts {
   id: number;
