@@ -50,62 +50,15 @@ router.get('/', async (req, res) => {
         totalVotes: true,
         goodPercentage: true,
         okPercentage: true,
-        badPercentage: true
+        badPercentage: true,
       }
     })
-
-    if (!prompts || prompts.length === 0) {
-      return res.json({
-        prompts: [],
-        totalStats: {
-          totalVotes: 0,
-          byPrompt: []
-        }
-      })
-    }
-
-    // Transform the data to include vote counts
-    const promptsWithCounts: PromptWithCounts[] = prompts.map((prompt: PromptFromDB) => {
-      const votes = {
-        good: prompt.goodVotes,
-        ok: prompt.okVotes,
-        bad: prompt.badVotes
-      }
-      const percentages = {
-        good: prompt.goodPercentage,
-        ok: prompt.okPercentage,
-        bad: prompt.badPercentage
-      }
-
-      return {
-        id: prompt.id,
-        name: prompt.name,
-        promptText: prompt.promptText,
-        votes,
-        percentages,
-        totalVotes: prompt.totalVotes,
-        summary: `${prompt.name}: ${votes.good} good (${percentages.good}%), ${votes.ok} ok (${percentages.ok}%), ${votes.bad} bad (${percentages.bad}%) - Total: ${prompt.totalVotes}`
-      }
-    })
-
-    // Sort by total votes or percentage of good votes
-    promptsWithCounts.sort((a: PromptWithCounts, b: PromptWithCounts) => b.votes.good - a.votes.good)
-
-    const response = {
-      prompts: promptsWithCounts,
-      totalStats: {
-        totalVotes: promptsWithCounts.reduce((sum: number, p: PromptWithCounts) => sum + p.totalVotes, 0),
-        byPrompt: promptsWithCounts.map((p: PromptWithCounts) => p.summary)
-      }
-    }
-
-    res.json(response)
+    
+    console.log(`Found ${prompts.length} prompts`)
+    res.json(prompts)
   } catch (error) {
     console.error('Error fetching prompts:', error)
-    res.status(500).json({ 
-      error: 'Failed to fetch prompts',
-      details: error instanceof Error ? error.message : 'Unknown error'
-    })
+    res.status(500).json({ error: 'Failed to fetch prompts', details: error.message })
   }
 })
 

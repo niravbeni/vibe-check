@@ -19,16 +19,12 @@ export interface PromptResult {
 export interface PromptData {
   id: number;
   name: string;
-  text: string;
-  votes: {
-    good: number;
-    ok: number;
-    bad: number;
-  };
+  promptText: string;
+  goodVotes: number;
+  okVotes: number;
+  badVotes: number;
   totalVotes: number;
-  percentages: {
-    good: number;
-    ok: number;
-    bad: number;
-  };
+  goodPercentage: number;
+  okPercentage: number;
+  badPercentage: number;
 } 

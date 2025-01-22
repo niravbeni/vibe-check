@@ -29,10 +29,17 @@ function App() {
   useEffect(() => {
     const fetchPrompt = async () => {
       try {
-        const response = await fetch(`${API_URL}/prompts`)
+        const response = await fetch(`${API_URL}/api/prompts`)
         if (!response.ok) throw new Error('Failed to fetch prompt')
-        const data = await response.json()
-        setPromptData(data.prompts[0]) // Get the single prompt
+        const prompts = await response.json()
+        
+        // Check if we have any prompts
+        if (!prompts || !prompts.length) {
+          console.error('No prompts found in the response')
+          return
+        }
+        
+        setPromptData(prompts[0]) // Get the single prompt
       } catch (error) {
         console.error('Error fetching prompt:', error)
       }
@@ -69,28 +76,34 @@ function App() {
     }
   }
 
-  const handleEvaluation = async (score: 'good' | 'bad' | 'ok') => {
-    try {
-      if (!promptData) return
+  const handleVote = async (score: string) => {
+    if (!promptData) return
 
-      const response = await fetch(`${API_URL}/prompts/${promptData.id}/vote`, {
+    try {
+      const response = await fetch(`${API_URL}/api/prompts/${promptData.id}/vote`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json'
+        },
         body: JSON.stringify({ score })
       })
 
-      if (!response.ok) {
-        throw new Error('Failed to submit vote')
-      }
+      if (!response.ok) throw new Error('Failed to submit vote')
 
-      // Fetch updated rankings
-      const updatedPrompt = await fetch(`${API_URL}/prompts`)
-      const data = await updatedPrompt.json()
-      setPromptData(data.prompts[0])
-      setShowResults(true)
+      // Fetch updated prompt data
+      const updatedPrompt = await fetch(`${API_URL}/api/prompts`)
+      if (!updatedPrompt.ok) throw new Error('Failed to fetch updated prompt')
+      
+      const prompts = await updatedPrompt.json()
+      if (!prompts || !prompts.length) {
+        console.error('No prompts found in the response')
+        return
+      }
+      
+      setPromptData(prompts[0])
+      setShowRankings(true)
     } catch (error) {
-      console.error('Error submitting evaluation:', error)
-      alert('Error submitting vote. Please try again.')
+      console.error('Error submitting vote:', error)
     }
   }
 
@@ -102,21 +115,35 @@ function App() {
 
   const generateLabels = async () => {
     try {
-      const response = await fetch(`${API_URL}/generate-labels`, {
+      console.log('Sending images to generate labels:', images)
+      const response = await fetch(`${API_URL}/api/generate-labels`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json'
+        },
         body: JSON.stringify({ images })
       })
 
       if (!response.ok) {
+        const errorText = await response.text()
+        console.error('Server error:', errorText)
         throw new Error('Failed to generate labels')
       }
-      
+
       const data = await response.json()
+      console.log('Received label data:', data)
+      
+      if (!data.categories) {
+        console.error('No categories found in response:', data)
+        throw new Error('Invalid response format')
+      }
+      
       setLabelCategories(data.categories)
+      setShowResults(false) // Keep showing the ButtonCard instead of success message
     } catch (error) {
       console.error('Error generating labels:', error)
-      alert('Error generating labels. Please try again.')
+      setIsGenerating(false)
+      throw error
     }
   }
 
@@ -129,8 +156,10 @@ function App() {
       await generateLabels()
     } catch (error) {
       console.error('Error starting the process:', error)
+      alert('Failed to generate labels. Please try again.')
+    } finally {
+      setIsGenerating(false)
     }
-    setIsGenerating(false)
   }
 
   const handleRefresh = () => {
@@ -175,7 +204,7 @@ function App() {
         {totalLabels > 0 && !showResults && promptData && (
           <ButtonCard
             labelCategories={labelCategories}
-            onEvaluate={handleEvaluation}
+            onEvaluate={handleVote}
             isLoading={false}
             isFinalPrompt={true}
           />

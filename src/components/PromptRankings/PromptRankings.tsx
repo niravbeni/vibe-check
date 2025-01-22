@@ -45,9 +45,9 @@ export const PromptRankings = ({ prompt, showRankings }: PromptRankingsProps) =>
     <RankingsContainer>
       <RankingCard>
         <Stats>
-          <Score>Good: {prompt.votes.good}</Score>
-          <Score>OK: {prompt.votes.ok}</Score>
-          <Score>Bad: {prompt.votes.bad}</Score>
+          <Score>Good: {prompt.goodVotes}</Score>
+          <Score>OK: {prompt.okVotes}</Score>
+          <Score>Bad: {prompt.badVotes}</Score>
           <Score>Total: {prompt.totalVotes}</Score>
           <ResetButton onClick={handleResetClick}>
             🔄 Reset
@@ -56,19 +56,19 @@ export const PromptRankings = ({ prompt, showRankings }: PromptRankingsProps) =>
         <ProgressBar>
           <div 
             style={{ 
-              width: `${prompt.percentages.good}%`,
+              width: `${prompt.goodPercentage}%`,
               backgroundColor: '#22c55e'
             }} 
           />
           <div 
             style={{ 
-              width: `${prompt.percentages.ok}%`,
+              width: `${prompt.okPercentage}%`,
               backgroundColor: '#eab308'
             }} 
           />
           <div 
             style={{ 
-              width: `${prompt.percentages.bad}%`,
+              width: `${prompt.badPercentage}%`,
               backgroundColor: '#ef4444'
             }} 
           />

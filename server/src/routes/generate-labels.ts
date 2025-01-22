@@ -1,7 +1,16 @@
 import { Router } from 'express'
 import OpenAI from 'openai'
+import * as dotenv from 'dotenv'
+
+// Load environment variables
+dotenv.config()
 
 const router = Router()
+
+console.log('Environment variables:', {
+  OPENAI_API_KEY: process.env.OPENAI_API_KEY ? 'Set' : 'Not set',
+  DATABASE_URL: process.env.DATABASE_URL
+})
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -35,12 +44,20 @@ interface LabelCategories {
 
 router.post('/', async (req, res) => {
   try {
+    console.log('Generating labels...')
     const { images } = req.body as { images: ImageData[] }
 
     if (!images || images.length !== 3) {
-      throw new Error('Exactly 3 images are required')
+      console.error('Invalid request: Incorrect number of images')
+      return res.status(400).json({ error: 'Exactly 3 images are required' })
     }
 
+    if (!process.env.OPENAI_API_KEY) {
+      console.error('OpenAI API key not found')
+      return res.status(500).json({ error: 'OpenAI API key not configured' })
+    }
+
+    console.log('Sending request to OpenAI...')
     const messages = [
       {
         role: "system" as const,
@@ -114,7 +131,7 @@ AESTHETIC: tailored, urban-chic, structured"
     res.json({ categories })
   } catch (error) {
     console.error('Error generating labels:', error)
-    res.status(500).json({ error: 'Failed to generate labels' })
+    res.status(500).json({ error: 'Failed to generate labels', details: error.message })
   }
 })
 

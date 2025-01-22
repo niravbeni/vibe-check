@@ -1,14 +1,13 @@
+import * as dotenv from 'dotenv'
+dotenv.config()
+
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
 import generateLabelsRouter from './routes/generate-labels.js';
 import resetVotesRouter from './routes/reset-votes.js';
 import promptsRouter from './routes/prompts.js';
 
 // Load environment variables
-dotenv.config();
-
-// Validate required environment variables
 if (!process.env.OPENAI_API_KEY) {
   console.error('OPENAI_API_KEY is not set in environment variables');
   process.exit(1);
