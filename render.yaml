@@ -10,9 +10,10 @@ services:
       echo "Build completed, checking contents..."
       ls -la dist/src/
       ls -la dist/lib/
-      echo "Generating Prisma client..."
+      echo "Setting up database..."
       npx prisma generate
       npx prisma migrate deploy
+      npx prisma db push --accept-data-loss
     startCommand: |
       cd server
       echo "Starting server in production mode..."
