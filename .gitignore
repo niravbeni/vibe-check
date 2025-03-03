@@ -30,3 +30,8 @@ dist-ssr
 server/.env
 server/.env.*
 !server/.env.example
+
+VITE_API_URL=http://localhost:3000
+
+DATABASE_URL="file:./dev.db"
+OPENAI_API_KEY=your_openai_api_key_here
